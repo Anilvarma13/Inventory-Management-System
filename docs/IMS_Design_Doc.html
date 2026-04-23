@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>StockFlow — Design Document</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ── TOKENS ──────────────────────────────────────────────── */
+:root{
+  --navy:     #0B1829;
+  --navy-80:  #162336;
+  --navy-60:  #1E3350;
+  --teal:     #00D4AA;
+  --teal-dim: #00A882;
+  --teal-pale:#E6FAF6;
+  --amber:    #F5A623;
+  --amber-pale:#FEF3D7;
+  --rose:     #F04E6A;
+  --rose-pale:#FDE8EC;
+  --violet:   #7C5CFC;
+  --violet-pale:#EEE9FF;
+  --slate-90: #0F172A;
+  --slate-70: #1E293B;
+  --slate-50: #334155;
+  --slate-30: #64748B;
+  --slate-15: #CBD5E1;
+  --slate-05: #F1F5F9;
+  --white:    #FFFFFF;
+  --surface:  #F8FAFC;
+
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  --radius-sm:  6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+
+  --shadow-sm: 0 1px 3px rgba(11,24,41,.08), 0 1px 2px rgba(11,24,41,.04);
+  --shadow-md: 0 4px 16px rgba(11,24,41,.10), 0 2px 6px rgba(11,24,41,.06);
+  --shadow-lg: 0 20px 48px rgba(11,24,41,.14), 0 8px 20px rgba(11,24,41,.08);
+  --shadow-teal: 0 8px 32px rgba(0,212,170,.20);
+}
+
+/* ── RESET ───────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--surface);color:var(--slate-90);line-height:1.6;font-size:16px}
+
+/* ── UTILITIES ───────────────────────────────────────────── */
+.container{max-width:1200px;margin:0 auto;padding:0 48px}
+.tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:99px;background:var(--teal-pale);color:var(--teal-dim)}
+.section-label{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--teal-dim);margin-bottom:12px}
+.divider{border:none;border-top:1px solid var(--slate-15);margin:0}
+
+/* ── NAV ─────────────────────────────────────────────────── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(248,250,252,.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--slate-15);
+  padding:16px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo-mark{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-60) 100%);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.nav-logo-mark::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,transparent 40%,var(--teal) 100%);
+  opacity:.7;
+}
+.nav-logo-mark svg{position:relative;z-index:1}
+.nav-logo-text{font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--navy)}
+.nav-links{display:flex;gap:32px;list-style:none}
+.nav-links a{font-size:13px;font-weight:500;color:var(--slate-50);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--teal-dim)}
+.nav-badge{font-size:11px;background:var(--navy);color:var(--white);padding:4px 10px;border-radius:99px;font-weight:500}
+
+/* ── HERO ─────────────────────────────────────────────────── */
+.hero{
+  background:var(--navy);
+  padding:100px 48px 80px;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;top:-120px;right:-80px;
+  width:640px;height:640px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,212,170,.15) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero::after{
+  content:'';position:absolute;bottom:-200px;left:-100px;
+  width:480px;height:480px;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,92,252,.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-inner{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+.hero-eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.hero-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.2)}}
+.hero-eyebrow-text{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
+.hero h1{
+  font-family:var(--font-head);font-size:clamp(48px,6vw,80px);font-weight:800;
+  color:var(--white);line-height:1.05;letter-spacing:-.03em;
+  max-width:700px;margin-bottom:24px;
+}
+.hero h1 span{
+  background:linear-gradient(135deg,var(--teal) 0%,#00A882 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-sub{font-size:18px;color:rgba(255,255,255,.6);max-width:520px;margin-bottom:48px;line-height:1.7;font-weight:300}
+.hero-meta{display:flex;gap:48px;flex-wrap:wrap}
+.hero-meta-item{border-left:2px solid var(--teal);padding-left:16px}
+.hero-meta-item strong{display:block;font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--white)}
+.hero-meta-item span{font-size:13px;color:rgba(255,255,255,.5)}
+
+/* ── SECTION ─────────────────────────────────────────────── */
+.section{padding:80px 0}
+.section-header{margin-bottom:52px}
+.section-header h2{font-family:var(--font-head);font-size:36px;font-weight:700;color:var(--navy);letter-spacing:-.02em;margin-bottom:8px}
+.section-header p{font-size:15px;color:var(--slate-30);max-width:520px;line-height:1.7}
+
+/* ── COLOR PALETTE ───────────────────────────────────────── */
+.palette-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}
+.swatch{border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm)}
+.swatch-color{height:100px;position:relative}
+.swatch-color::after{content:attr(data-hex);position:absolute;bottom:10px;left:12px;font-family:var(--font-mono);font-size:12px;font-weight:500;color:rgba(255,255,255,.8)}
+.swatch-meta{padding:12px;background:var(--white);border-top:1px solid var(--slate-15)}
+.swatch-name{font-size:13px;font-weight:600;color:var(--slate-70)}
+.swatch-use{font-size:11px;color:var(--slate-30);margin-top:2px}
+
+/* ── TYPOGRAPHY ──────────────────────────────────────────── */
+.type-scale{display:flex;flex-direction:column;gap:0}
+.type-row{display:grid;grid-template-columns:180px 1fr 120px;align-items:baseline;padding:20px 0;border-bottom:1px solid var(--slate-15)}
+.type-row:last-child{border-bottom:none}
+.type-meta{font-family:var(--font-mono);font-size:11px;color:var(--slate-30)}
+.type-spec{font-family:var(--font-mono);font-size:11px;color:var(--slate-30);text-align:right}
+.t-display{font-family:var(--font-head);font-size:56px;font-weight:800;color:var(--navy);letter-spacing:-.03em;line-height:1}
+.t-h1{font-family:var(--font-head);font-size:40px;font-weight:700;color:var(--navy);letter-spacing:-.025em;line-height:1.1}
+.t-h2{font-family:var(--font-head);font-size:28px;font-weight:700;color:var(--navy);letter-spacing:-.02em}
+.t-h3{font-family:var(--font-head);font-size:20px;font-weight:600;color:var(--navy);letter-spacing:-.01em}
+.t-body-lg{font-size:18px;color:var(--slate-70);font-weight:300;line-height:1.7}
+.t-body{font-size:15px;color:var(--slate-70);line-height:1.6}
+.t-caption{font-size:12px;color:var(--slate-30);line-height:1.5}
+.t-mono{font-family:var(--font-mono);font-size:13px;color:var(--teal-dim)}
+
+/* ── SPACING SYSTEM ──────────────────────────────────────── */
+.spacing-grid{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.sp-item{display:flex;flex-direction:column;align-items:center;gap:8px}
+.sp-bar{background:linear-gradient(180deg,var(--teal) 0%,var(--teal-dim) 100%);border-radius:4px 4px 0 0;width:40px}
+.sp-label{font-family:var(--font-mono);font-size:10px;color:var(--slate-30);text-align:center}
+.sp-val{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--slate-70);text-align:center}
+
+/* ── COMPONENTS ──────────────────────────────────────────── */
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.comp-card{background:var(--white);border:1px solid var(--slate-15);border-radius:var(--radius-lg);padding:32px;box-shadow:var(--shadow-sm)}
+.comp-card-title{font-family:var(--font-head);font-size:14px;font-weight:600;color:var(--slate-50);letter-spacing:.04em;text-transform:uppercase;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--slate-15)}
+.comp-demo{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-body);font-size:14px;font-weight:500;border:none;cursor:pointer;border-radius:var(--radius-sm);padding:10px 20px;transition:all .18s ease;text-decoration:none}
+.btn-primary{background:var(--navy);color:var(--white)}
+.btn-primary:hover{background:var(--navy-60);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.btn-teal{background:var(--teal);color:var(--navy)}
+.btn-teal:hover{background:var(--teal-dim);box-shadow:var(--shadow-teal);transform:translateY(-1px)}
+.btn-outline{background:transparent;color:var(--navy);border:1.5px solid var(--slate-15)}
+.btn-outline:hover{border-color:var(--navy);background:var(--slate-05)}
+.btn-ghost{background:transparent;color:var(--slate-50);padding:10px 16px}
+.btn-ghost:hover{background:var(--slate-05);color:var(--navy)}
+.btn-danger{background:var(--rose-pale);color:var(--rose)}
+.btn-danger:hover{background:var(--rose);color:var(--white)}
+.btn-sm{font-size:12px;padding:7px 14px}
+.btn-lg{font-size:15px;padding:14px 28px;border-radius:var(--radius-md)}
+.btn-icon{padding:10px;border-radius:var(--radius-sm)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px}
+.badge-success{background:var(--teal-pale);color:var(--teal-dim)}
+.badge-warning{background:var(--amber-pale);color:#B8780A}
+.badge-danger{background:var(--rose-pale);color:var(--rose)}
+.badge-info{background:var(--violet-pale);color:var(--violet)}
+.badge-neutral{background:var(--slate-05);color:var(--slate-50)}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+/* INPUTS */
+.input-group{display:flex;flex-direction:column;gap:6px;width:100%}
+.input-label{font-size:13px;font-weight:500;color:var(--slate-70)}
+.input-field{font-family:var(--font-body);font-size:14px;padding:10px 14px;border:1.5px solid var(--slate-15);border-radius:var(--radius-sm);background:var(--white);color:var(--navy);outline:none;transition:border .18s,box-shadow .18s;width:100%}
+.input-field:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,212,170,.15)}
+.input-field.has-error{border-color:var(--rose)}
+.input-hint{font-size:11px;color:var(--slate-30)}
+.input-hint.error{color:var(--rose)}
+.input-with-icon{position:relative}
+.input-with-icon .input-field{padding-left:38px}
+.input-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--slate-30)}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--slate-15);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s}
+.card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.card-stat{display:flex;flex-direction:column;gap:8px}
+.card-stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.card-stat-value{font-family:var(--font-head);font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em}
+.card-stat-label{font-size:13px;color:var(--slate-30)}
+.card-stat-trend{font-size:13px;font-weight:500;color:var(--teal-dim)}
+
+/* TABLE */
+.table-demo{width:100%;border-collapse:collapse;font-size:13px}
+.table-demo th{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-30);font-weight:500;padding:10px 16px;text-align:left;border-bottom:1px solid var(--slate-15);background:var(--surface)}
+.table-demo td{padding:14px 16px;border-bottom:1px solid var(--slate-15);color:var(--slate-70);vertical-align:middle}
+.table-demo tr:last-child td{border-bottom:none}
+.table-demo tr:hover td{background:var(--surface)}
+.sku-tag{font-family:var(--font-mono);font-size:12px;background:var(--slate-05);color:var(--slate-50);padding:3px 8px;border-radius:4px}
+.stock-bar{display:flex;align-items:center;gap:8px}
+.stock-progress{flex:1;height:6px;background:var(--slate-15);border-radius:99px;overflow:hidden}
+.stock-fill{height:100%;border-radius:99px;background:var(--teal)}
+.stock-fill.low{background:var(--rose)}
+.stock-fill.mid{background:var(--amber)}
+
+/* ALERTS */
+.alert{display:flex;gap:12px;padding:14px 18px;border-radius:var(--radius-md);font-size:14px;border-left:3px solid currentColor}
+.alert-success{background:var(--teal-pale);color:var(--teal-dim)}
+.alert-warning{background:var(--amber-pale);color:#A36C00}
+.alert-danger{background:var(--rose-pale);color:var(--rose)}
+.alert-info{background:var(--violet-pale);color:var(--violet)}
+.alert-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.alert strong{font-weight:600;display:block;margin-bottom:2px}
+
+/* NAVIGATION SIDEBAR DEMO */
+.sidebar-demo{
+  background:var(--navy);border-radius:var(--radius-lg);
+  padding:24px 16px;width:220px;flex-shrink:0;
+  display:flex;flex-direction:column;gap:4px;
+}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:16px}
+.sidebar-logo-mark{width:32px;height:32px;border-radius:9px;background:var(--teal);display:flex;align-items:center;justify-content:center}
+.sidebar-logo-text{font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--white)}
+.sidebar-section{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:12px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:background .15s;font-size:13px;color:rgba(255,255,255,.6);font-weight:500}
+.nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
+.nav-item.active{background:rgba(0,212,170,.15);color:var(--teal)}
+.nav-icon{width:18px;height:18px;opacity:.8;flex-shrink:0}
+.nav-badge-count{margin-left:auto;background:var(--teal);color:var(--navy);font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px}
+
+/* LAYOUT SCREENS ──────────────────────────────────────────── */
+.screen-wrap{
+  background:var(--surface);border-radius:var(--radius-xl);
+  border:1px solid var(--slate-15);overflow:hidden;
+  box-shadow:var(--shadow-lg);
+}
+.screen-toolbar{
+  background:var(--white);border-bottom:1px solid var(--slate-15);
+  padding:12px 24px;display:flex;align-items:center;gap:12px;
+}
+.toolbar-dots{display:flex;gap:6px}
+.toolbar-dots span{width:12px;height:12px;border-radius:50%}
+.toolbar-url{flex:1;background:var(--slate-05);border:1px solid var(--slate-15);border-radius:6px;padding:6px 12px;font-family:var(--font-mono);font-size:11px;color:var(--slate-30);text-align:center}
+.screen-inner{display:flex;min-height:480px}
+.screen-sidebar{width:200px;background:var(--navy);flex-shrink:0;padding:20px 12px;display:flex;flex-direction:column;gap:3px}
+.screen-body{flex:1;padding:24px;overflow:hidden}
+.screen-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.screen-title{font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--navy);letter-spacing:-.02em}
+
+/* DASHBOARD WIDGETS */
+.dash-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi-widget{background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--slate-15)}
+.kpi-icon-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.kpi-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.kpi-trend{font-size:11px;font-weight:600;padding:3px 7px;border-radius:99px}
+.kpi-val{font-family:var(--font-head);font-size:24px;font-weight:700;color:var(--navy);letter-spacing:-.02em}
+.kpi-lbl{font-size:11px;color:var(--slate-30);margin-top:2px}
+
+.chart-placeholder{background:var(--white);border-radius:12px;border:1px solid var(--slate-15);padding:16px;margin-bottom:12px}
+.chart-head{display:flex;justify-content:space-between;margin-bottom:12px}
+.chart-title-small{font-family:var(--font-head);font-size:13px;font-weight:600;color:var(--navy)}
+.chart-bars{display:flex;align-items:flex-end;gap:5px;height:90px}
+.chart-bar{flex:1;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--teal) 0%,var(--teal-dim) 100%);opacity:.85;transition:opacity .2s}
+.chart-bar:hover{opacity:1}
+.chart-bar.dimmed{background:var(--slate-15);opacity:1}
+
+/* ICONOGRAPHY ───────────────────────────────────────────── */
+.icon-grid{display:flex;flex-wrap:wrap;gap:8px}
+.icon-item{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  background:var(--white);border:1px solid var(--slate-15);
+  border-radius:var(--radius-md);padding:16px 12px;width:90px;
+  cursor:pointer;transition:all .18s;
+}
+.icon-item:hover{border-color:var(--teal);background:var(--teal-pale);transform:translateY(-2px)}
+.icon-item svg{color:var(--slate-50)}
+.icon-item:hover svg{color:var(--teal-dim)}
+.icon-name{font-family:var(--font-mono);font-size:9px;color:var(--slate-30);text-align:center}
+
+/* MOTION ───────────────────────────────────────────────── */
+.motion-demo{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.motion-card{
+  background:var(--white);border:1px solid var(--slate-15);
+  border-radius:var(--radius-lg);padding:24px;
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  text-align:center;
+}
+.motion-block{
+  width:48px;height:48px;border-radius:12px;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--teal) 100%);
+}
+.anim-fade-up{animation:fadeUp .6s ease forwards}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.anim-scale{animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes scaleIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+.anim-slide{animation:slideIn .5s ease forwards}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+.motion-name{font-family:var(--font-head);font-size:14px;font-weight:600;color:var(--navy)}
+.motion-desc{font-size:12px;color:var(--slate-30);line-height:1.5}
+.motion-spec{font-family:var(--font-mono);font-size:11px;color:var(--teal-dim);background:var(--teal-pale);padding:4px 10px;border-radius:99px}
+
+/* INTERACTION STATES ─────────────────────────────────────── */
+.states-row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.state-demo{display:flex;flex-direction:column;gap:6px;align-items:center;font-family:var(--font-mono);font-size:10px;color:var(--slate-30);letter-spacing:.06em;text-transform:uppercase}
+
+/* GRID SYSTEM ───────────────────────────────────────────── */
+.grid-viz{display:grid;grid-template-columns:repeat(12,1fr);gap:8px;margin-bottom:16px}
+.grid-col{height:32px;border-radius:4px;background:rgba(0,212,170,.12);border:1px dashed rgba(0,212,170,.35)}
+.grid-demo-row{display:grid;grid-template-columns:repeat(12,1fr);gap:8px;margin-bottom:8px}
+.grid-block{border-radius:8px;padding:10px 12px;background:linear-gradient(135deg,var(--teal-pale),var(--violet-pale));border:1px solid var(--slate-15);font-family:var(--font-mono);font-size:10px;color:var(--slate-50);display:flex;align-items:center;justify-content:center}
+
+/* FULL SCREENS SECTION ──────────────────────────────────── */
+.screens-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.screen-thumb{
+  background:var(--white);border:1px solid var(--slate-15);
+  border-radius:var(--radius-lg);overflow:hidden;
+  box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s;cursor:pointer;
+}
+.screen-thumb:hover{box-shadow:var(--shadow-lg);transform:translateY(-4px)}
+.screen-thumb-bar{
+  background:var(--surface);border-bottom:1px solid var(--slate-15);
+  padding:10px 14px;display:flex;align-items:center;gap:6px;
+}
+.dot-red{background:#FF5F57;width:10px;height:10px;border-radius:50%}
+.dot-yellow{background:#FEBC2E;width:10px;height:10px;border-radius:50%}
+.dot-green{background:#28C840;width:10px;height:10px;border-radius:50%}
+.screen-thumb-body{padding:20px;min-height:220px;background:var(--surface)}
+.screen-thumb-label{font-size:11px;color:var(--slate-30);text-align:center;padding:12px;border-top:1px solid var(--slate-15);font-family:var(--font-mono);letter-spacing:.06em;text-transform:uppercase}
+
+/* MINI SCREENS for screen-thumb */
+.mini-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.mini-title{font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--navy)}
+.mini-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.mini-kpi{background:var(--white);border:1px solid var(--slate-15);border-radius:8px;padding:10px;text-align:center}
+.mini-kpi-val{font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--navy)}
+.mini-kpi-lbl{font-size:9px;color:var(--slate-30);font-family:var(--font-mono)}
+.mini-table-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--slate-15);font-size:11px;color:var(--slate-70)}
+.mini-table-row:last-child{border-bottom:none}
+
+/* ACCESSIBILITY ─────────────────────────────────────────── */
+.a11y-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.a11y-card{background:var(--white);border:1px solid var(--slate-15);border-radius:var(--radius-md);padding:20px}
+.a11y-card-title{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:8px}
+.contrast-pair{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.contrast-box{padding:8px 14px;border-radius:6px;font-weight:600;font-size:14px;flex:1;text-align:center}
+.contrast-ratio{font-family:var(--font-mono);font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:var(--teal-pale);color:var(--teal-dim)}
+
+/* RESPONSIVE ─────────────────────────────────────────────── */
+@media(max-width:768px){
+  nav{padding:12px 20px}
+  .hero{padding:60px 20px 50px}
+  .container{padding:0 20px}
+  .comp-grid{grid-template-columns:1fr}
+  .screens-grid{grid-template-columns:1fr}
+  .dash-kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .motion-demo{grid-template-columns:1fr}
+  .a11y-grid{grid-template-columns:1fr}
+}
+
+/* ── REVEAL ANIMATIONS ───────────────────────────────────── */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ── FOOTER ──────────────────────────────────────────────── */
+footer{background:var(--navy);padding:48px;margin-top:0}
+footer .container{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.footer-brand{font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--white)}
+.footer-meta{font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,.35)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-mark">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    </div>
+    <span class="nav-logo-text">StockFlow</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#colors">Colors</a></li>
+    <li><a href="#typography">Typography</a></li>
+    <li><a href="#components">Components</a></li>
+    <li><a href="#layouts">Layouts</a></li>
+    <li><a href="#motion">Motion</a></li>
+  </ul>
+  <span class="nav-badge">Design System v1.0</span>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <div class="hero-dot"></div>
+      <span class="hero-eyebrow-text">Design Document — Inventory Management System</span>
+    </div>
+    <h1>StockFlow<br/><span>Design System</span></h1>
+    <p class="hero-sub">A comprehensive design language for a modern, warehouse-grade inventory management web application. Crafted for clarity, speed, and operational confidence.</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item"><strong>v1.0</strong><span>Current Version</span></div>
+      <div class="hero-meta-item"><strong>Apr 2025</strong><span>Released</span></div>
+      <div class="hero-meta-item"><strong>React + TS</strong><span>Stack</span></div>
+      <div class="hero-meta-item"><strong>WCAG 2.1 AA</strong><span>Accessibility</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 1. BRAND IDENTITY ─────────────────────────────────── -->
+<section class="section" id="brand">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">01 — Brand Identity</div>
+      <h2>Brand Identity</h2>
+      <p>StockFlow is enterprise-grade yet approachable. The brand communicates precision, speed, and transparency — the three pillars of great inventory management.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" class="reveal">
+      <!-- Logo variants -->
+      <div class="comp-card">
+        <div class="comp-card-title">Logo Variants</div>
+        <div style="display:flex;flex-direction:column;gap:24px">
+          <!-- Full dark -->
+          <div style="background:var(--navy);border-radius:12px;padding:28px;display:flex;align-items:center;gap:14px">
+            <div style="width:48px;height:48px;border-radius:14px;background:var(--teal);display:flex;align-items:center;justify-content:center">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0B1829" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <div>
+              <div style="font-family:var(--font-head);font-size:28px;font-weight:800;color:var(--white);letter-spacing:-.02em">StockFlow</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:var(--font-mono);letter-spacing:.1em;text-transform:uppercase">Inventory Management</div>
+            </div>
+          </div>
+          <!-- Light -->
+          <div style="background:var(--surface);border:1px solid var(--slate-15);border-radius:12px;padding:28px;display:flex;align-items:center;gap:14px">
+            <div style="width:48px;height:48px;border-radius:14px;background:var(--navy);display:flex;align-items:center;justify-content:center;position:relative">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              <div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:var(--teal);border:2px solid var(--surface)"></div>
+            </div>
+            <div>
+              <div style="font-family:var(--font-head);font-size:26px;font-weight:800;color:var(--navy);letter-spacing:-.02em">StockFlow</div>
+              <div style="font-size:11px;color:var(--slate-30);font-family:var(--font-mono);letter-spacing:.1em;text-transform:uppercase">Inventory Management</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Brand voice -->
+      <div class="comp-card">
+        <div class="comp-card-title">Brand Voice & Values</div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="padding:16px;background:var(--teal-pale);border-radius:10px;border-left:3px solid var(--teal)">
+            <div style="font-family:var(--font-head);font-size:14px;font-weight:600;color:var(--navy);margin-bottom:4px">⚡ Speed</div>
+            <div style="font-size:13px;color:var(--slate-50)">Zero-latency operations. Offline-first barcode scanning. Instant stock lookups across warehouses.</div>
+          </div>
+          <div style="padding:16px;background:var(--violet-pale);border-radius:10px;border-left:3px solid var(--violet)">
+            <div style="font-family:var(--font-head);font-size:14px;font-weight:600;color:var(--navy);margin-bottom:4px">🎯 Precision</div>
+            <div style="font-size:13px;color:var(--slate-50)">Real-time accuracy. Serial numbers, lot tracking, cycle counts. Zero room for ambiguity.</div>
+          </div>
+          <div style="padding:16px;background:var(--amber-pale);border-radius:10px;border-left:3px solid var(--amber)">
+            <div style="font-family:var(--font-head);font-size:14px;font-weight:600;color:var(--navy);margin-bottom:4px">🔮 Clarity</div>
+            <div style="font-size:13px;color:var(--slate-50)">Clean dashboards. Actionable alerts. Every user knows exactly what needs attention.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ── 2. COLOR PALETTE ──────────────────────────────────── -->
+<section class="section" id="colors">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">02 — Visual Foundation</div>
+      <h2>Color System</h2>
+      <p>A deep navy core with a teal accent creates authority and clarity. Semantic colors communicate status unambiguously across the application.</p>
+    </div>
+
+    <div class="section-label reveal" style="margin-bottom:16px">Primary Palette</div>
+    <div class="palette-grid reveal" style="margin-bottom:40px">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#0B1829" data-hex="#0B1829"></div>
+        <div class="swatch-meta"><div class="swatch-name">Navy 900</div><div class="swatch-use">App background, sidebar</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#162336" data-hex="#162336"></div>
+        <div class="swatch-meta"><div class="swatch-name">Navy 800</div><div class="swatch-use">Cards on dark bg</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1E3350" data-hex="#1E3350"></div>
+        <div class="swatch-meta"><div class="swatch-name">Navy 600</div><div class="swatch-use">Hover on dark</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#00D4AA" data-hex="#00D4AA"></div>
+        <div class="swatch-meta"><div class="swatch-name">Teal 500</div><div class="swatch-use">Primary CTA, highlights</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#00A882" data-hex="#00A882"></div>
+        <div class="swatch-meta"><div class="swatch-name">Teal 700</div><div class="swatch-use">Hover state, text on light</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#E6FAF6" data-hex="#E6FAF6"></div>
+        <div class="swatch-meta"><div class="swatch-name">Teal 50</div><div class="swatch-use">Success bg, tinted surface</div></div>
+      </div>
+    </div>
+
+    <div class="section-label reveal" style="margin-bottom:16px">Neutral Scale</div>
+    <div class="palette-grid reveal" style="margin-bottom:40px">
+      <div class="swatch"><div class="swatch-color" style="background:#0F172A" data-hex="#0F172A"></div><div class="swatch-meta"><div class="swatch-name">Slate 900</div><div class="swatch-use">Primary text</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#1E293B" data-hex="#1E293B"></div><div class="swatch-meta"><div class="swatch-name">Slate 800</div><div class="swatch-use">Headings on light</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#334155" data-hex="#334155"></div><div class="swatch-meta"><div class="swatch-name">Slate 600</div><div class="swatch-use">Secondary text</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#64748B" data-hex="#64748B"></div><div class="swatch-meta"><div class="swatch-name">Slate 400</div><div class="swatch-use">Muted / captions</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#CBD5E1" data-hex="#CBD5E1"></div><div class="swatch-meta"><div class="swatch-name">Slate 200</div><div class="swatch-use">Borders, dividers</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#F1F5F9" data-hex="#F1F5F9"></div><div class="swatch-meta"><div class="swatch-name">Slate 50</div><div class="swatch-use">Page / table bg</div></div></div>
+    </div>
+
+    <div class="section-label reveal" style="margin-bottom:16px">Semantic Colors</div>
+    <div class="palette-grid reveal">
+      <div class="swatch"><div class="swatch-color" style="background:#00D4AA" data-hex="#00D4AA"></div><div class="swatch-meta"><div class="swatch-name">Success</div><div class="swatch-use">In stock, completed</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#F5A623" data-hex="#F5A623"></div><div class="swatch-meta"><div class="swatch-name">Warning</div><div class="swatch-use">Low stock, pending</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#F04E6A" data-hex="#F04E6A"></div><div class="swatch-meta"><div class="swatch-name">Danger</div><div class="swatch-use">Out of stock, error</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#7C5CFC" data-hex="#7C5CFC"></div><div class="swatch-meta"><div class="swatch-name">Info</div><div class="swatch-use">Info, transfers</div></div></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ── 3. TYPOGRAPHY ─────────────────────────────────────── -->
+<section class="section" id="typography">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">03 — Typography</div>
+      <h2>Type System</h2>
+      <p>Syne for display and headings brings a distinctive geometric character. DM Sans keeps body text highly legible at every size. DM Mono for data, labels, and codes.</p>
+    </div>
+
+    <div class="comp-card reveal" style="margin-bottom:24px">
+      <div class="comp-card-title">Font Pairing</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px">
+        <div>
+          <div class="section-label" style="margin-bottom:8px">Display — Syne</div>
+          <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--navy);letter-spacing:-.03em;line-height:1.1">Warehouse<br/>in control</div>
+          <div style="font-size:12px;color:var(--slate-30);margin-top:8px;font-family:var(--font-mono)">Used: Hero, section titles, KPI values</div>
+        </div>
+        <div>
+          <div class="section-label" style="margin-bottom:8px">Body — DM Sans</div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:15px;color:var(--slate-70);line-height:1.7;font-weight:300">Real-time inventory tracking across all locations. Know exactly what you have, where it is, and what needs to be replenished next.</div>
+          <div style="font-size:12px;color:var(--slate-30);margin-top:8px;font-family:var(--font-mono)">Used: All body copy, descriptions</div>
+        </div>
+        <div>
+          <div class="section-label" style="margin-bottom:8px">Mono — DM Mono</div>
+          <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--teal-dim);line-height:1.9">SKU-00412<br/>LOT-2025-08<br/>#inv.receipt<br/>API_KEY_PROD<br/>v2.4.1-stable</div>
+          <div style="font-size:12px;color:var(--slate-30);margin-top:8px;font-family:var(--font-mono)">Used: SKUs, codes, labels, API</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card reveal">
+      <div class="comp-card-title">Type Scale</div>
+      <div class="type-scale">
+        <div class="type-row"><div class="type-meta">Display</div><div class="t-display">56 / 800</div><div class="type-spec">56px · 800 · −0.03em</div></div>
+        <div class="type-row"><div class="type-meta">Heading 1</div><div class="t-h1">Heading One</div><div class="type-spec">40px · 700 · −0.025em</div></div>
+        <div class="type-row"><div class="type-meta">Heading 2</div><div class="t-h2">Heading Two</div><div class="type-spec">28px · 700 · −0.02em</div></div>
+        <div class="type-row"><div class="type-meta">Heading 3</div><div class="t-h3">Heading Three</div><div class="type-spec">20px · 600 · −0.01em</div></div>
+        <div class="type-row"><div class="type-meta">Body Large</div><div class="t-body-lg">Body large — light weight introductory text</div><div class="type-spec">18px · 300 · 1.7</div></div>
+        <div class="type-row"><div class="type-meta">Body</div><div class="t-body">Standard body text for all general content and descriptions</div><div class="type-spec">15px · 400 · 1.6</div></div>
+        <div class="type-row"><div class="type-meta">Caption</div><div class="t-caption">Small label, timestamp, meta information</div><div class="type-spec">12px · 400 · 1.5</div></div>
+        <div class="type-row"><div class="type-meta">Mono</div><div class="t-mono">SKU-00412 · LOT-2025-08 · #A1B2</div><div class="type-spec">13px · 400 · Mono</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ── 4. SPACING & GRID ──────────────────────────────────── -->
+<section class="section" id="spacing">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">04 — Layout</div>
+      <h2>Spacing & Grid System</h2>
+      <p>An 8px base unit governs all spacing decisions. A 12-column grid accommodates flexible dashboard and list-view layouts.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" class="reveal">
+      <div class="comp-card">
+        <div class="comp-card-title">Spacing Scale (8px base)</div>
+        <div class="spacing-grid" style="margin-bottom:0">
+          <div class="sp-item"><div class="sp-bar" style="height:4px"></div><div class="sp-label">xs</div><div class="sp-val">4px</div></div>
+          <div class="sp-item"><div class="sp-bar" style="height:8px"></div><div class="sp-label">sm</div><div class="sp-val">8px</div></div>
+          <div class="sp-item"><div class="sp-bar" style="height:12px"></div><div class="sp-label">md</div><div class="sp-val">12px</div></div>
+          <div class="sp-item"><div class="sp-bar" style="height:16px"></div><div class="sp-label">lg</div><div class="sp-val">16px</div></div>
+          <div class="sp-item"><div class="sp-bar" style="height:24px"></div><div class="sp-label">xl</div><div class="sp-val">24px</div></div>
+          <div class="sp-item"><div class="sp-bar" style="height:32px"></div><div class="sp-label">2xl</div><div class="sp-val">32px</div></div>
+          <div class="sp-item"><div class="sp-bar" style="height:48px"></div><div class="sp-label">3xl</div><div class="sp-val">48px</div></div>
+          <div class="sp-item"><div class="sp-bar" style="height:64px"></div><div class="sp-label">4xl</div><div class="sp-val">64px</div></div>
+          <div class="sp-item"><div class="sp-bar" style="height:80px"></div><div class="sp-label">5xl</div><div class="sp-val">80px</div></div>
+        </div>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-title">12-Column Grid (1200px max)</div>
+        <div class="grid-viz">
+          <div class="grid-col"></div><div class="grid-col"></div><div class="grid-col"></div>
+          <div class="grid-col"></div><div class="grid-col"></div><div class="grid-col"></div>
+          <div class="grid-col"></div><div class="grid-col"></div><div class="grid-col"></div>
+          <div class="grid-col"></div><div class="grid-col"></div><div class="grid-col"></div>
+        </div>
+        <div class="grid-demo-row">
+          <div class="grid-block" style="grid-column:span 3">3 col</div>
+          <div class="grid-block" style="grid-column:span 3">3 col</div>
+          <div class="grid-block" style="grid-column:span 3">3 col</div>
+          <div class="grid-block" style="grid-column:span 3">3 col</div>
+        </div>
+        <div class="grid-demo-row">
+          <div class="grid-block" style="grid-column:span 8">8 col — Main content</div>
+          <div class="grid-block" style="grid-column:span 4">4 col — Sidebar</div>
+        </div>
+        <div class="grid-demo-row">
+          <div class="grid-block" style="grid-column:span 12">12 col — Full width</div>
+        </div>
+        <div style="margin-top:16px;font-size:12px;color:var(--slate-30);font-family:var(--font-mono)">
+          Gutter: 24px &nbsp;|&nbsp; Column: auto &nbsp;|&nbsp; Margin: 48px &nbsp;|&nbsp; Breakpoints: 768 / 1024 / 1200px
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ── 5. COMPONENTS ─────────────────────────────────────── -->
+<section class="section" id="components">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">05 — Components</div>
+      <h2>UI Component Library</h2>
+      <p>Every component is designed for dense data environments. Hover states, loading states, and empty states are specified for each.</p>
+    </div>
+
+    <!-- BUTTONS -->
+    <div class="comp-card reveal" style="margin-bottom:24px">
+      <div class="comp-card-title">Buttons</div>
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div>
+          <div style="font-size:12px;color:var(--slate-30);margin-bottom:10px;font-family:var(--font-mono)">Variants</div>
+          <div class="comp-demo">
+            <button class="btn btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+              Primary
+            </button>
+            <button class="btn btn-teal">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Item
+            </button>
+            <button class="btn btn-outline">Outline</button>
+            <button class="btn btn-ghost">Ghost</button>
+            <button class="btn btn-danger">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Delete
+            </button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--slate-30);margin-bottom:10px;font-family:var(--font-mono)">Sizes</div>
+          <div class="comp-demo" style="align-items:center">
+            <button class="btn btn-primary btn-sm">Small</button>
+            <button class="btn btn-primary">Default</button>
+            <button class="btn btn-primary btn-lg">Large</button>
+            <button class="btn btn-teal btn-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BADGES & STATUS -->
+    <div class="comp-grid reveal" style="margin-bottom:24px">
+      <div class="comp-card">
+        <div class="comp-card-title">Status Badges</div>
+        <div class="comp-demo" style="flex-direction:column;align-items:flex-start;gap:10px">
+          <span class="badge badge-success"><span class="badge-dot"></span>In Stock</span>
+          <span class="badge badge-warning"><span class="badge-dot"></span>Low Stock</span>
+          <span class="badge badge-danger"><span class="badge-dot"></span>Out of Stock</span>
+          <span class="badge badge-info"><span class="badge-dot"></span>On Transfer</span>
+          <span class="badge badge-neutral"><span class="badge-dot"></span>Discontinued</span>
+        </div>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-title">Order Status Badges</div>
+        <div class="comp-demo" style="flex-direction:column;align-items:flex-start;gap:10px">
+          <span class="badge badge-neutral">Draft</span>
+          <span class="badge badge-info">Submitted</span>
+          <span class="badge badge-warning">Pending Approval</span>
+          <span class="badge badge-success">Approved</span>
+          <span class="badge badge-success" style="background:#D1FAE5;color:#065F46">Completed</span>
+          <span class="badge badge-danger">Cancelled</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- INPUTS -->
+    <div class="comp-card reveal" style="margin-bottom:24px">
+      <div class="comp-card-title">Form Inputs</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+        <div class="input-group">
+          <label class="input-label">Product Name</label>
+          <input class="input-field" type="text" placeholder="e.g. Wireless Headset Pro" value="Wireless Headset Pro"/>
+          <span class="input-hint">Must be unique across catalogue</span>
+        </div>
+        <div class="input-group">
+          <label class="input-label">SKU Code</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+            <input class="input-field" type="text" placeholder="SKU-00000" value="WHP-2025-XL"/>
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Quantity</label>
+          <input class="input-field has-error" type="number" value="-5"/>
+          <span class="input-hint error">Quantity cannot be negative</span>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Category</label>
+          <select class="input-field" style="appearance:none;cursor:pointer">
+            <option>Electronics</option>
+            <option>Accessories</option>
+            <option>Hardware</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Reorder Point</label>
+          <input class="input-field" type="number" value="20" placeholder="Minimum quantity"/>
+          <span class="input-hint">Alert triggers when stock falls below this</span>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Barcode / QR</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="4" height="16"/><rect x="8" y="4" width="2" height="16"/><rect x="12" y="4" width="4" height="16"/><rect x="18" y="4" width="4" height="16"/></svg>
+            <input class="input-field" type="text" placeholder="Scan or type barcode" value="8901234567890"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATA TABLE -->
+    <div class="comp-card reveal" style="margin-bottom:24px">
+      <div class="comp-card-title">Data Table — Inventory List</div>
+      <div style="overflow-x:auto">
+        <table class="table-demo">
+          <thead>
+            <tr>
+              <th><input type="checkbox" style="accent-color:var(--teal)"/></th>
+              <th>Product</th>
+              <th>SKU</th>
+              <th>Category</th>
+              <th>On Hand</th>
+              <th>Stock Level</th>
+              <th>Status</th>
+              <th>Last Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="checkbox" checked style="accent-color:var(--teal)"/></td>
+              <td><div style="font-weight:500;color:var(--navy)">Wireless Headset Pro XL</div><div style="font-size:11px;color:var(--slate-30)">Warehouse A · Shelf 3B</div></td>
+              <td><span class="sku-tag">WHP-2025-XL</span></td>
+              <td><span style="font-size:13px;color:var(--slate-50)">Electronics</span></td>
+              <td><strong style="color:var(--navy)">842</strong></td>
+              <td><div class="stock-bar"><div class="stock-progress"><div class="stock-fill" style="width:85%"></div></div><span style="font-size:11px;color:var(--slate-30)">85%</span></div></td>
+              <td><span class="badge badge-success"><span class="badge-dot"></span>In Stock</span></td>
+              <td><span style="font-size:12px;color:var(--slate-30)">2h ago</span></td>
+              <td><button class="btn btn-ghost btn-sm">Edit</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--teal)"/></td>
+              <td><div style="font-weight:500;color:var(--navy)">USB-C Hub 7-in-1</div><div style="font-size:11px;color:var(--slate-30)">Warehouse B · Shelf 1A</div></td>
+              <td><span class="sku-tag">USB-HUB-7</span></td>
+              <td><span style="font-size:13px;color:var(--slate-50)">Accessories</span></td>
+              <td><strong style="color:var(--amber)">14</strong></td>
+              <td><div class="stock-bar"><div class="stock-progress"><div class="stock-fill mid" style="width:18%"></div></div><span style="font-size:11px;color:var(--slate-30)">18%</span></div></td>
+              <td><span class="badge badge-warning"><span class="badge-dot"></span>Low Stock</span></td>
+              <td><span style="font-size:12px;color:var(--slate-30)">1d ago</span></td>
+              <td><button class="btn btn-ghost btn-sm">Edit</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--teal)"/></td>
+              <td><div style="font-weight:500;color:var(--navy)">HDMI 4K Cable 2m</div><div style="font-size:11px;color:var(--slate-30)">Warehouse A · Shelf 7C</div></td>
+              <td><span class="sku-tag">CAB-HDMI-4K</span></td>
+              <td><span style="font-size:13px;color:var(--slate-50)">Cables</span></td>
+              <td><strong style="color:var(--rose)">0</strong></td>
+              <td><div class="stock-bar"><div class="stock-progress"><div class="stock-fill low" style="width:2%"></div></div><span style="font-size:11px;color:var(--slate-30)">0%</span></div></td>
+              <td><span class="badge badge-danger"><span class="badge-dot"></span>Out of Stock</span></td>
+              <td><span style="font-size:12px;color:var(--slate-30)">3d ago</span></td>
+              <td><button class="btn btn-ghost btn-sm">Reorder</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="comp-card reveal">
+      <div class="comp-card-title">Alerts & Notifications</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="alert alert-success"><div class="alert-icon">✓</div><div><strong>Stock receipt confirmed</strong>200 units of WHP-2025-XL received at Warehouse A. Inventory updated.</div></div>
+        <div class="alert alert-warning"><div class="alert-icon">⚠</div><div><strong>Low stock alert</strong>USB-C Hub 7-in-1 (USB-HUB-7) has fallen below the reorder point of 20 units.</div></div>
+        <div class="alert alert-danger"><div class="alert-icon">✕</div><div><strong>Out of stock</strong>HDMI 4K Cable 2m is completely out of stock. 3 pending sales orders are affected.</div></div>
+        <div class="alert alert-info"><div class="alert-icon">ℹ</div><div><strong>Transfer in progress</strong>50 units of SKU-00412 are being transferred from Warehouse B to Warehouse A.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ── 6. NAVIGATION PATTERN ─────────────────────────────── -->
+<section class="section" id="navigation">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">06 — Navigation</div>
+      <h2>Sidebar Navigation</h2>
+      <p>A persistent dark sidebar anchors the app's structure. Context-aware active states and notification badges keep users oriented.</p>
+    </div>
+    <div class="reveal" style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+      <!-- Sidebar -->
+      <div class="sidebar-demo">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-mark">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B1829" stroke-width="2.5" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          </div>
+          <span class="sidebar-logo-text">StockFlow</span>
+        </div>
+
+        <div class="sidebar-section">Main</div>
+        <div class="nav-item active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          Inventory
+          <span class="nav-badge-count">3</span>
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+          Products
+        </div>
+
+        <div class="sidebar-section">Operations</div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          Purchase Orders
+          <span class="nav-badge-count">7</span>
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Sales Orders
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Transfers
+        </div>
+
+        <div class="sidebar-section">Insights</div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Analytics
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Reports
+        </div>
+
+        <div style="margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)">
+          <div class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+            Settings
+          </div>
+        </div>
+      </div>
+
+      <!-- Explanation -->
+      <div style="flex:1;min-width:280px">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="comp-card">
+            <div class="comp-card-title">Sidebar Specs</div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--slate-70)">
+              <div style="display:flex;justify-content:space-between"><span>Width</span><span class="sku-tag">220px</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Background</span><span class="sku-tag">#0B1829</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Item height</span><span class="sku-tag">40px</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Active bg</span><span class="sku-tag">teal / 15% opacity</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Border radius</span><span class="sku-tag">6px</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Icon size</span><span class="sku-tag">18 × 18px</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Collapsible</span><span class="sku-tag">64px icon mode</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ── 7. KEY SCREEN LAYOUTS ─────────────────────────────── -->
+<section class="section" id="layouts">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">07 — Screen Layouts</div>
+      <h2>Key Application Screens</h2>
+      <p>Inspired by Odoo's clean operational layout — every screen balances information density with visual breathing room.</p>
+    </div>
+
+    <!-- Dashboard Full Screen Mock -->
+    <div class="screen-wrap reveal" style="margin-bottom:32px">
+      <div class="screen-toolbar">
+        <div class="toolbar-dots"><span style="background:#FF5F57"></span><span style="background:#FEBC2E"></span><span style="background:#28C840"></span></div>
+        <div class="toolbar-url">app.stockflow.io/dashboard</div>
+      </div>
+      <div class="screen-inner">
+        <!-- Mini sidebar -->
+        <div class="screen-sidebar">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px;margin-bottom:14px">
+            <div style="width:26px;height:26px;border-radius:7px;background:var(--teal);display:flex;align-items:center;justify-content:center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B1829" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            </div>
+            <span style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--white)">StockFlow</span>
+          </div>
+          <div style="font-size:8px;font-family:var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:8px 8px 4px">Main</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;background:rgba(0,212,170,.15);color:var(--teal);font-size:11px;font-weight:500;margin-bottom:2px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Dashboard
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;color:rgba(255,255,255,.55);font-size:11px;font-weight:500;margin-bottom:2px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Inventory
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;color:rgba(255,255,255,.55);font-size:11px;font-weight:500;margin-bottom:2px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg>
+            Products
+          </div>
+          <div style="font-size:8px;font-family:var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:8px 8px 4px;margin-top:4px">Ops</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;color:rgba(255,255,255,.55);font-size:11px;font-weight:500;margin-bottom:2px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/></svg>
+            Purchase Orders
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;color:rgba(255,255,255,.55);font-size:11px;font-weight:500">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
+            Sales Orders
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="screen-body">
+          <div class="screen-topbar">
+            <div class="screen-title">Dashboard</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div style="font-size:11px;background:var(--slate-05);border:1px solid var(--slate-15);border-radius:6px;padding:6px 12px;color:var(--slate-50);font-family:var(--font-mono)">Apr 2025</div>
+              <button class="btn btn-teal btn-sm">+ New Order</button>
+            </div>
+          </div>
+
+          <!-- KPIs -->
+          <div class="dash-kpi-grid">
+            <div class="kpi-widget">
+              <div class="kpi-icon-row">
+                <div class="kpi-icon" style="background:var(--teal-pale)">📦</div>
+                <div class="kpi-trend" style="background:var(--teal-pale);color:var(--teal-dim)">+4.2%</div>
+              </div>
+              <div class="kpi-val">4,821</div>
+              <div class="kpi-lbl">Total SKUs</div>
+            </div>
+            <div class="kpi-widget">
+              <div class="kpi-icon-row">
+                <div class="kpi-icon" style="background:var(--rose-pale)">⚠️</div>
+                <div class="kpi-trend" style="background:var(--rose-pale);color:var(--rose)">−3 today</div>
+              </div>
+              <div class="kpi-val" style="color:var(--rose)">23</div>
+              <div class="kpi-lbl">Low Stock Items</div>
+            </div>
+            <div class="kpi-widget">
+              <div class="kpi-icon-row">
+                <div class="kpi-icon" style="background:var(--amber-pale)">🛒</div>
+                <div class="kpi-trend" style="background:var(--amber-pale);color:#A36C00">12 pending</div>
+              </div>
+              <div class="kpi-val">38</div>
+              <div class="kpi-lbl">Open POs</div>
+            </div>
+            <div class="kpi-widget">
+              <div class="kpi-icon-row">
+                <div class="kpi-icon" style="background:var(--violet-pale)">💰</div>
+                <div class="kpi-trend" style="background:var(--teal-pale);color:var(--teal-dim)">+12.1%</div>
+              </div>
+              <div class="kpi-val">₹84.2L</div>
+              <div class="kpi-lbl">Stock Value</div>
+            </div>
+          </div>
+
+          <!-- Chart + Recent -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="chart-placeholder">
+              <div class="chart-head">
+                <div class="chart-title-small">Stock Movements — Last 14 Days</div>
+                <span class="badge badge-success" style="font-size:10px">Live</span>
+              </div>
+              <div class="chart-bars">
+                <div class="chart-bar" style="height:40%"></div>
+                <div class="chart-bar" style="height:65%"></div>
+                <div class="chart-bar" style="height:50%"></div>
+                <div class="chart-bar" style="height:80%"></div>
+                <div class="chart-bar dimmed" style="height:35%"></div>
+                <div class="chart-bar" style="height:70%"></div>
+                <div class="chart-bar" style="height:55%"></div>
+                <div class="chart-bar" style="height:90%"></div>
+                <div class="chart-bar" style="height:45%"></div>
+                <div class="chart-bar" style="height:75%"></div>
+                <div class="chart-bar" style="height:60%"></div>
+                <div class="chart-bar" style="height:85%"></div>
+                <div class="chart-bar" style="height:50%"></div>
+                <div class="chart-bar" style="height:95%"></div>
+              </div>
+            </div>
+            <div class="chart-placeholder">
+              <div class="chart-head"><div class="chart-title-small">Recent Activity</div></div>
+              <div class="mini-table-row"><span style="color:var(--teal-dim)">✓ PO #1082 received</span><span>2m ago</span></div>
+              <div class="mini-table-row"><span style="color:var(--rose)">⚠ WHP-2025-XL low stock</span><span>18m ago</span></div>
+              <div class="mini-table-row"><span style="color:var(--violet)">→ Transfer #0041 shipped</span><span>1h ago</span></div>
+              <div class="mini-table-row"><span style="color:var(--amber)">⏱ SO #2204 pending</span><span>2h ago</span></div>
+              <div class="mini-table-row"><span style="color:var(--teal-dim)">✓ Stock count complete</span><span>4h ago</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen thumbs -->
+    <div class="screens-grid reveal">
+      <!-- Products -->
+      <div class="screen-thumb">
+        <div class="screen-thumb-bar"><div class="dot-red"></div><div class="dot-yellow"></div><div class="dot-green"></div><div style="font-family:var(--font-mono);font-size:10px;color:var(--slate-30);margin-left:8px">Products — Catalogue</div></div>
+        <div class="screen-thumb-body">
+          <div class="mini-top">
+            <div class="mini-title">Product Catalogue</div>
+            <button class="btn btn-teal btn-sm">+ Add Product</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <div style="flex:1;background:var(--white);border:1px solid var(--slate-15);border-radius:6px;padding:7px 12px;font-size:11px;color:var(--slate-30);font-family:var(--font-mono)">🔍 Search SKU, name, barcode…</div>
+            <div style="background:var(--white);border:1px solid var(--slate-15);border-radius:6px;padding:7px 12px;font-size:11px;color:var(--slate-30)">Filter ▾</div>
+          </div>
+          <div class="mini-table-row" style="font-weight:600;font-size:10px;color:var(--slate-30)"><span>PRODUCT</span><span>SKU</span><span>QTY</span><span>STATUS</span></div>
+          <div class="mini-table-row"><span>Wireless Headset Pro XL</span><span class="sku-tag" style="font-size:9px">WHP-XL</span><span>842</span><span style="color:var(--teal-dim);font-size:10px">● In Stock</span></div>
+          <div class="mini-table-row"><span>USB-C Hub 7-in-1</span><span class="sku-tag" style="font-size:9px">HUB-7</span><span>14</span><span style="color:var(--amber);font-size:10px">● Low</span></div>
+          <div class="mini-table-row"><span>HDMI 4K Cable 2m</span><span class="sku-tag" style="font-size:9px">CAB-4K</span><span>0</span><span style="color:var(--rose);font-size:10px">● Out</span></div>
+          <div class="mini-table-row"><span>Mech. Keyboard TKL</span><span class="sku-tag" style="font-size:9px">KB-TKL</span><span>291</span><span style="color:var(--teal-dim);font-size:10px">● In Stock</span></div>
+        </div>
+        <div class="screen-thumb-label">Products / Catalogue View</div>
+      </div>
+
+      <!-- Purchase Order -->
+      <div class="screen-thumb">
+        <div class="screen-thumb-bar"><div class="dot-red"></div><div class="dot-yellow"></div><div class="dot-green"></div><div style="font-family:var(--font-mono);font-size:10px;color:var(--slate-30);margin-left:8px">Purchase Order — Create</div></div>
+        <div class="screen-thumb-body">
+          <div class="mini-top">
+            <div class="mini-title">New Purchase Order</div>
+            <span class="badge badge-neutral">Draft</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div style="background:var(--white);border:1px solid var(--slate-15);border-radius:6px;padding:10px">
+              <div style="font-size:9px;font-family:var(--font-mono);color:var(--slate-30);margin-bottom:4px">SUPPLIER</div>
+              <div style="font-size:12px;font-weight:600;color:var(--navy)">TechDist India Pvt Ltd</div>
+            </div>
+            <div style="background:var(--white);border:1px solid var(--slate-15);border-radius:6px;padding:10px">
+              <div style="font-size:9px;font-family:var(--font-mono);color:var(--slate-30);margin-bottom:4px">EXPECTED DELIVERY</div>
+              <div style="font-size:12px;font-weight:600;color:var(--navy)">May 5, 2025</div>
+            </div>
+          </div>
+          <div style="background:var(--white);border:1px solid var(--slate-15);border-radius:8px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:0;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--slate-15);font-size:9px;font-family:var(--font-mono);color:var(--slate-30)"><span>PRODUCT</span><span>QTY</span><span>UNIT COST</span><span>TOTAL</span></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:0;padding:9px 12px;border-bottom:1px solid var(--slate-15);font-size:11px;color:var(--slate-70)"><span>Wireless Headset Pro XL</span><span>200</span><span>₹3,499</span><span>₹6,99,800</span></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:0;padding:9px 12px;font-size:11px;color:var(--slate-70)"><span>USB-C Hub 7-in-1</span><span>100</span><span>₹1,299</span><span>₹1,29,900</span></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:12px;gap:8px">
+            <button class="btn btn-outline btn-sm">Save Draft</button>
+            <button class="btn btn-teal btn-sm">Submit for Approval</button>
+          </div>
+        </div>
+        <div class="screen-thumb-label">Purchasing / Create PO</div>
+      </div>
+
+      <!-- Analytics -->
+      <div class="screen-thumb">
+        <div class="screen-thumb-bar"><div class="dot-red"></div><div class="dot-yellow"></div><div class="dot-green"></div><div style="font-family:var(--font-mono);font-size:10px;color:var(--slate-30);margin-left:8px">Analytics — Reports</div></div>
+        <div class="screen-thumb-body">
+          <div class="mini-top">
+            <div class="mini-title">Inventory Analytics</div>
+            <div style="font-size:10px;font-family:var(--font-mono);background:var(--slate-05);border:1px solid var(--slate-15);padding:5px 10px;border-radius:6px;color:var(--slate-50)">Q1 2025</div>
+          </div>
+          <div class="mini-kpis">
+            <div class="mini-kpi"><div class="mini-kpi-val" style="color:var(--teal-dim)">98.4%</div><div class="mini-kpi-lbl">Accuracy</div></div>
+            <div class="mini-kpi"><div class="mini-kpi-val" style="color:var(--navy)">12.4K</div><div class="mini-kpi-lbl">Movements</div></div>
+            <div class="mini-kpi"><div class="mini-kpi-val" style="color:var(--amber)">4.2%</div><div class="mini-kpi-lbl">Stockout</div></div>
+            <div class="mini-kpi"><div class="mini-kpi-val" style="color:var(--violet)">₹84.2L</div><div class="mini-kpi-lbl">Value</div></div>
+          </div>
+          <div style="background:var(--white);border:1px solid var(--slate-15);border-radius:8px;padding:12px">
+            <div style="font-size:11px;font-weight:600;color:var(--navy);margin-bottom:8px">Top Moving Products</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--slate-50);margin-bottom:2px"><span>Wireless Headset Pro XL</span><span>3,421 units</span></div><div style="height:5px;background:var(--slate-15);border-radius:99px"><div style="height:100%;width:82%;background:var(--teal);border-radius:99px"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--slate-50);margin-bottom:2px"><span>USB-C Hub 7-in-1</span><span>2,180 units</span></div><div style="height:5px;background:var(--slate-15);border-radius:99px"><div style="height:100%;width:52%;background:var(--violet);border-radius:99px"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--slate-50);margin-bottom:2px"><span>Mech. Keyboard TKL</span><span>1,840 units</span></div><div style="height:5px;background:var(--slate-15);border-radius:99px"><div style="height:100%;width:44%;background:var(--amber);border-radius:99px"></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-thumb-label">Analytics / Reports View</div>
+      </div>
+
+      <!-- Stock Alerts -->
+      <div class="screen-thumb">
+        <div class="screen-thumb-bar"><div class="dot-red"></div><div class="dot-yellow"></div><div class="dot-green"></div><div style="font-family:var(--font-mono);font-size:10px;color:var(--slate-30);margin-left:8px">Alerts — Low Stock</div></div>
+        <div class="screen-thumb-body">
+          <div class="mini-top">
+            <div class="mini-title">Low Stock Alerts</div>
+            <span class="badge badge-danger">23 Items</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:var(--rose-pale);border:1px solid #F9C1CB;border-radius:8px;padding:12px;border-left:3px solid var(--rose)">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div><div style="font-size:12px;font-weight:600;color:var(--navy)">HDMI 4K Cable 2m</div><div style="font-family:var(--font-mono);font-size:10px;color:var(--slate-30)">CAB-HDMI-4K</div></div>
+                <span class="badge badge-danger" style="font-size:10px">0 units</span>
+              </div>
+              <div style="margin-top:8px;display:flex;gap:6px"><button class="btn btn-danger btn-sm" style="font-size:10px;padding:5px 10px">Reorder Now</button></div>
+            </div>
+            <div style="background:var(--amber-pale);border:1px solid #F5D9A8;border-radius:8px;padding:12px;border-left:3px solid var(--amber)">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div><div style="font-size:12px;font-weight:600;color:var(--navy)">USB-C Hub 7-in-1</div><div style="font-family:var(--font-mono);font-size:10px;color:var(--slate-30)">USB-HUB-7</div></div>
+                <span class="badge badge-warning" style="font-size:10px">14 units</span>
+              </div>
+              <div style="margin-top:8px;font-size:10px;color:var(--slate-50)">Reorder point: 20 · Suggested qty: 150</div>
+            </div>
+            <div style="background:var(--amber-pale);border:1px solid #F5D9A8;border-radius:8px;padding:12px;border-left:3px solid var(--amber)">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div><div style="font-size:12px;font-weight:600;color:var(--navy)">Thermal Label Rolls</div><div style="font-family:var(--font-mono);font-size:10px;color:var(--slate-30)">ROLL-THERM</div></div>
+                <span class="badge badge-warning" style="font-size:10px">8 units</span>
+              </div>
+              <div style="margin-top:8px;font-size:10px;color:var(--slate-50)">Reorder point: 25 · Suggested qty: 200</div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-thumb-label">Alerts / Low Stock Management</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ── 8. ICONOGRAPHY ─────────────────────────────────────── -->
+<section class="section" id="icons">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">08 — Iconography</div>
+      <h2>Icon System</h2>
+      <p>Lucide icons — 2px stroke, 24×24 viewBox, rounded linecaps. Consistent, legible at every size from 14px to 48px.</p>
+    </div>
+    <div class="icon-grid reveal">
+      <!-- Icons using SVG -->
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="icon-name">dashboard</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span class="icon-name">inventory</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        <span class="icon-name">purchase</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        <span class="icon-name">orders</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <span class="icon-name">transfer</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        <span class="icon-name">category</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span class="icon-name">search</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="4" height="16"/><rect x="8" y="4" width="2" height="16"/><rect x="12" y="4" width="4" height="16"/><rect x="18" y="4" width="4" height="16"/></svg>
+        <span class="icon-name">barcode</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        <span class="icon-name">analytics</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="icon-name">report</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="icon-name">supplier</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"/></svg>
+        <span class="icon-name">alerts</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        <span class="icon-name">settings</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span class="icon-name">lock</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+        <span class="icon-name">warehouse</span>
+      </div>
+      <div class="icon-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span class="icon-name">add</span>
+      </div>
+    </div>
+    <div style="margin-top:20px;padding:16px;background:var(--slate-05);border:1px dashed var(--slate-15);border-radius:var(--radius-md);font-size:13px;color:var(--slate-50)">
+      📦 <strong style="color:var(--navy)">Icon Library:</strong> Lucide React — 2px stroke width, rounded caps/joins, 24×24px base grid. Scale: 14px (inline), 18px (nav), 20px (action), 24px (feature), 40px (hero).
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ── 9. MOTION ──────────────────────────────────────────── -->
+<section class="section" id="motion">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">09 — Motion & Animation</div>
+      <h2>Motion Principles</h2>
+      <p>Animation serves function, not decoration. Every transition communicates cause-and-effect. Timing is tuned for an operational environment where speed matters.</p>
+    </div>
+
+    <div class="motion-demo reveal">
+      <div class="motion-card">
+        <div class="motion-block anim-fade-up"></div>
+        <div class="motion-name">Fade Up</div>
+        <div class="motion-desc">Page entry, modals appearing, notifications. Subtle upward lift signals arrival.</div>
+        <div class="motion-spec">600ms · ease · delay stagger</div>
+      </div>
+      <div class="motion-card">
+        <div class="motion-block anim-scale"></div>
+        <div class="motion-name">Scale In</div>
+        <div class="motion-desc">Tooltips, dropdowns, popovers. Spring-eased for a natural, bouncy pop.</div>
+        <div class="motion-spec">400ms · cubic-bezier(.34,1.56,.64,1)</div>
+      </div>
+      <div class="motion-card">
+        <div class="motion-block anim-slide"></div>
+        <div class="motion-name">Slide In</div>
+        <div class="motion-desc">Sidebar panels, drawer overlays, filter panels from edge.</div>
+        <div class="motion-spec">500ms · ease · translateX</div>
+      </div>
+    </div>
+
+    <div class="comp-card reveal" style="margin-top:24px">
+      <div class="comp-card-title">Easing & Duration Reference</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;font-size:13px">
+        <div>
+          <div style="font-weight:600;color:var(--navy);margin-bottom:10px">Micro-interactions</div>
+          <div style="font-family:var(--font-mono);color:var(--teal-dim);margin-bottom:6px">150–200ms</div>
+          <div style="color:var(--slate-50)">Hover states, button presses, checkbox toggles, focus rings</div>
+        </div>
+        <div>
+          <div style="font-weight:600;color:var(--navy);margin-bottom:10px">UI Transitions</div>
+          <div style="font-family:var(--font-mono);color:var(--teal-dim);margin-bottom:6px">250–400ms</div>
+          <div style="color:var(--slate-50)">Dropdowns, tooltips, accordion expand, tab switches</div>
+        </div>
+        <div>
+          <div style="font-weight:600;color:var(--navy);margin-bottom:10px">Page Transitions</div>
+          <div style="font-family:var(--font-mono);color:var(--teal-dim);margin-bottom:6px">500–700ms</div>
+          <div style="color:var(--slate-50)">Route changes, modal open/close, sidebar expand</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ── 10. ACCESSIBILITY ──────────────────────────────────── -->
+<section class="section" id="accessibility">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">10 — Accessibility</div>
+      <h2>Accessibility Standards</h2>
+      <p>WCAG 2.1 Level AA compliance across all components. Every interaction is keyboard-navigable and screen-reader friendly.</p>
+    </div>
+    <div class="a11y-grid reveal">
+      <div class="a11y-card">
+        <div class="a11y-card-title">Contrast Ratios</div>
+        <div class="contrast-pair">
+          <div class="contrast-box" style="background:#0B1829;color:#FFFFFF">Navy on White</div>
+          <span class="contrast-ratio">18.1:1 ✓ AAA</span>
+        </div>
+        <div class="contrast-pair">
+          <div class="contrast-box" style="background:#00A882;color:#FFFFFF">Teal on White</div>
+          <span class="contrast-ratio">4.6:1 ✓ AA</span>
+        </div>
+        <div class="contrast-pair">
+          <div class="contrast-box" style="background:#F1F5F9;color:#0F172A">Text on Surface</div>
+          <span class="contrast-ratio">16.4:1 ✓ AAA</span>
+        </div>
+      </div>
+      <div class="a11y-card">
+        <div class="a11y-card-title">Keyboard Navigation</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--slate-70)">
+          <div style="display:flex;justify-content:space-between"><span>Navigate elements</span><kbd style="background:var(--slate-05);border:1px solid var(--slate-15);border-radius:4px;padding:2px 8px;font-family:var(--font-mono);font-size:11px">Tab</kbd></div>
+          <div style="display:flex;justify-content:space-between"><span>Activate buttons</span><kbd style="background:var(--slate-05);border:1px solid var(--slate-15);border-radius:4px;padding:2px 8px;font-family:var(--font-mono);font-size:11px">Enter / Space</kbd></div>
+          <div style="display:flex;justify-content:space-between"><span>Close modals</span><kbd style="background:var(--slate-05);border:1px solid var(--slate-15);border-radius:4px;padding:2px 8px;font-family:var(--font-mono);font-size:11px">Esc</kbd></div>
+          <div style="display:flex;justify-content:space-between"><span>Table navigation</span><kbd style="background:var(--slate-05);border:1px solid var(--slate-15);border-radius:4px;padding:2px 8px;font-family:var(--font-mono);font-size:11px">Arrow keys</kbd></div>
+        </div>
+      </div>
+      <div class="a11y-card">
+        <div class="a11y-card-title">Focus Ring Style</div>
+        <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+          <button class="btn btn-primary" style="outline:3px solid var(--teal);outline-offset:3px">Focused Button</button>
+          <input class="input-field" style="outline:3px solid var(--teal);outline-offset:2px;width:100%" placeholder="Focused input"/>
+          <div style="font-size:12px;color:var(--slate-30);text-align:center;font-family:var(--font-mono)">3px teal ring · 2–3px offset · No border-radius change</div>
+        </div>
+      </div>
+      <div class="a11y-card">
+        <div class="a11y-card-title">Screen Reader Support</div>
+        <div style="font-size:13px;color:var(--slate-70);line-height:1.7">
+          All interactive elements have descriptive <code style="background:var(--slate-05);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:11px">aria-label</code> attributes. Tables include <code style="background:var(--slate-05);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:11px">scope</code> headers. Status changes announced via <code style="background:var(--slate-05);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:11px">aria-live</code> regions. Color is never the sole indicator.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ── 11. RESPONSIVE ─────────────────────────────────────── -->
+<section class="section" id="responsive">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">11 — Responsive Behaviour</div>
+      <h2>Breakpoints & Responsive Design</h2>
+      <p>Desktop-first design with tablet optimisation. Mobile is read-only for v1.0 — native mobile apps planned for v2.0.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px" class="reveal">
+      <div class="comp-card" style="border-top:4px solid var(--teal)">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--teal-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Desktop</div>
+        <div style="font-family:var(--font-head);font-size:28px;font-weight:700;color:var(--navy);margin-bottom:4px">1200px+</div>
+        <div style="font-size:13px;color:var(--slate-50);margin-bottom:16px">Full experience. Expanded sidebar, multi-column grids, data-dense tables.</div>
+        <div style="font-size:12px;color:var(--slate-30);font-family:var(--font-mono)">Sidebar: 220px expanded<br/>Grid: 12-col<br/>KPI row: 4 cols<br/>Data tables: full</div>
+      </div>
+      <div class="comp-card" style="border-top:4px solid var(--amber)">
+        <div style="font-family:var(--font-mono);font-size:10px;color:#A36C00;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Tablet</div>
+        <div style="font-family:var(--font-head);font-size:28px;font-weight:700;color:var(--navy);margin-bottom:4px">768–1199px</div>
+        <div style="font-size:13px;color:var(--slate-50);margin-bottom:16px">Collapsed sidebar (icon-only). 8-column grid. Horizontal scroll on tables.</div>
+        <div style="font-size:12px;color:var(--slate-30);font-family:var(--font-mono)">Sidebar: 64px icon mode<br/>Grid: 8-col<br/>KPI row: 2 cols<br/>Tables: scroll-x</div>
+      </div>
+      <div class="comp-card" style="border-top:4px solid var(--slate-15)">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--slate-30);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Mobile</div>
+        <div style="font-family:var(--font-head);font-size:28px;font-weight:700;color:var(--navy);margin-bottom:4px">&lt;768px</div>
+        <div style="font-size:13px;color:var(--slate-50);margin-bottom:16px">Read-only dashboards, alert views. Full mobile app planned for v2.0.</div>
+        <div style="font-size:12px;color:var(--slate-30);font-family:var(--font-mono)">Sidebar: hamburger menu<br/>Grid: 4-col / 1-col<br/>KPI row: 2 cols<br/>Tables: card view</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ──────────────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <div class="footer-brand">StockFlow — Design System v1.0</div>
+    <div class="footer-meta">
+      Reference: Odoo Inventory (odoo.com/app/inventory) &nbsp;·&nbsp;
+      Fonts: Syne + DM Sans + DM Mono &nbsp;·&nbsp;
+      Icons: Lucide &nbsp;·&nbsp;
+      Stack: React 18 + TypeScript + TailwindCSS &nbsp;·&nbsp;
+      WCAG 2.1 AA &nbsp;·&nbsp; April 2025
+    </div>
+  </div>
+</footer>
+
+<script>
+// Scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 60);
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.08 });
+reveals.forEach(el => observer.observe(el));
+
+// Replay motion demo on scroll into view
+const motionCards = document.querySelectorAll('.motion-block');
+const motionObs = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.animation = 'none';
+      entry.target.offsetHeight;
+      entry.target.style.animation = '';
+    }
+  });
+}, { threshold: 0.5 });
+motionCards.forEach(el => motionObs.observe(el));
+</script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --navy:     #0B1829;
+  --navy-80:  #162336;
+  --navy-60:  #1E3350;
+  --teal:     #00D4AA;
+  --teal-dim: #00A882;
+  --teal-pale:#E6FAF6;
+  --amber:    #F5A623;
+  --amber-pale:#FEF3D7;
+  --rose:     #F04E6A;
+  --rose-pale:#FDE8EC;
+  --violet:   #7C5CFC;
+  --violet-pale:#EEE9FF;
+  --slate-90: #0F172A;
+  --slate-70: #1E293B;
+  --slate-50: #334155;
+  --slate-30: #64748B;
+  --slate-15: #CBD5E1;
+  --slate-05: #F1F5F9;
+  --white:    #FFFFFF;
+  --surface:  #F8FAFC;
+
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  --radius-sm:  6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+
+  --shadow-sm: 0 1px 3px rgba(11,24,41,.08), 0 1px 2px rgba(11,24,41,.04);
+  --shadow-md: 0 4px 16px rgba(11,24,41,.10), 0 2px 6px rgba(11,24,41,.06);
+  --shadow-lg: 0 20px 48px rgba(11,24,41,.14), 0 8px 20px rgba(11,24,41,.08);
+  --shadow-teal: 0 8px 32px rgba(0,212,170,.20);
+}
+
+/* RESET */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);
+  background:var(--surface);
+  color:var(--slate-90);
+  line-height:1.6;
+  font-size:16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* TYPOGRAPHY */
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-head); }
+.t-mono { font-family: var(--font-mono); }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  transition: all .18s ease;
+  text-decoration: none;
+}
+
+.btn-primary { background: var(--navy); color: var(--white); }
+.btn-primary:hover { background: var(--navy-60); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+.btn-teal { background: var(--teal); color: var(--navy); }
+.btn-teal:hover { background: var(--teal-dim); box-shadow: var(--shadow-teal); transform: translateY(-1px); }
+
+.btn-outline { background: transparent; color: var(--navy); border: 1.5px solid var(--slate-15); }
+.btn-outline:hover { border-color: var(--navy); background: var(--slate-05); }
+
+/* CARDS */
+.card {
+  background: var(--white);
+  border: 1px solid var(--slate-15);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .2s, transform .2s;
+}
+.card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+/* LAYOUT */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 260px;
+  background: var(--navy);
+  color: var(--white);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: fixed;
+  height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 260px;
+  padding: 40px;
+  max-width: 1400px;
+}
+
+/* BADGES */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 99px;
+}
+.badge-success { background: var(--teal-pale); color: var(--teal-dim); }
+.badge-warning { background: var(--amber-pale); color: #B8780A; }
+.badge-danger { background: var(--rose-pale); color: var(--rose); }
+
+/* TABLE */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.data-table th {
+  background: var(--slate-05);
+  color: var(--slate-50);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--slate-15);
+}
+
+.data-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--slate-15);
+  color: var(--slate-70);
+}
+
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--surface); }
