@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Box, ShoppingCart, Users, Settings, LogOut, Package, History, TrendingUp, DollarSign, AlertCircle, BarChart3, ArrowUpRight, ArrowDownRight, ShieldCheck, LineChart as LineIcon } from 'lucide-react';
+import { LayoutDashboard, Box, ShoppingCart, Users, Settings, LogOut, Package, History, TrendingUp, DollarSign, AlertCircle, BarChart3, ArrowUpRight, ArrowDownRight, ShieldCheck, LineChart as LineIcon, Trash2 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 
 const API_BASE = 'http://localhost:8000/api';
@@ -225,12 +225,24 @@ const ProductModal = ({ isOpen, onClose, onSave, categories }: any) => {
 const Inventory = () => {
   const [products, setProducts] = React.useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const { user } = useAuth();
   
   const fetchProducts = () => { fetch(`${API_BASE}/products`).then(res => res.json()).then(setProducts); };
   React.useEffect(fetchProducts, []);
 
   const handleAdjust = (productId: number, adjustment: number) => {
     fetch(`${API_BASE}/inventory/adjust`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId, adjustment }) }).then(fetchProducts);
+  };
+
+  const handleDeleteProduct = async (productId: number) => {
+    if (window.confirm('Are you sure you want to delete this product? This will remove all associated inventory data.')) {
+      const res = await fetch(`${API_BASE}/products/${productId}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchProducts();
+      } else {
+        alert('Error deleting product');
+      }
+    }
   };
 
   const handleSaveProduct = async (data: any) => {
@@ -266,7 +278,7 @@ const Inventory = () => {
 
        <table className="data-table">
           <thead>
-            <tr><th>Product / SKU</th><th>Category</th><th>Qty</th><th>Asset Value</th><th>Status</th><th>Adjust</th></tr>
+            <tr><th>Product / SKU</th><th>Category</th><th>Qty</th><th>Asset Value</th><th>Status</th><th>Actions</th></tr>
           </thead>
           <tbody>
             {products.map(p => (
@@ -276,9 +288,21 @@ const Inventory = () => {
                 <td style={{ fontWeight: 800 }}>{p.quantity}</td>
                 <td>${(p.price * p.quantity).toLocaleString()}</td>
                 <td><span className={`badge ${p.status === 'In Stock' ? 'badge-success' : p.status === 'Low Stock' ? 'badge-warning' : 'badge-danger'}`}>{p.status}</span></td>
-                <td><div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={() => handleAdjust(p.id, 1)} className="btn btn-outline" style={{ padding: '2px 8px' }}>+</button>
-                  <button onClick={() => handleAdjust(p.id, -1)} className="btn btn-outline" style={{ padding: '2px 8px' }}>-</button>
+                <td><div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button onClick={() => handleAdjust(p.id, 1)} className="btn btn-outline" style={{ padding: '2px 8px' }}>+</button>
+                    <button onClick={() => handleAdjust(p.id, -1)} className="btn btn-outline" style={{ padding: '2px 8px' }}>-</button>
+                  </div>
+                  {user?.role === 'Admin' && (
+                    <button 
+                      onClick={() => handleDeleteProduct(p.id)} 
+                      className="btn btn-outline" 
+                      style={{ padding: '6px', color: 'var(--rose)', borderColor: 'rgba(240, 78, 106, 0.2)' }}
+                      title="Delete Product"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div></td>
               </tr>
             ))}

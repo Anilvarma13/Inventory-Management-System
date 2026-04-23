@@ -149,6 +149,36 @@ def create_product(data: dict, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.delete("/api/products/{product_id}")
+def delete_product(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(db_mod.Product).filter(db_mod.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    product_name = product.name
+    product_sku = product.sku
+
+    try:
+        # Delete related inventory
+        inventories = db.query(db_mod.Inventory).filter(db_mod.Inventory.product_id == product_id).all()
+        for inv in inventories:
+            db.delete(inv)
+        
+        # Delete related PO items
+        po_items = db.query(db_mod.POItem).filter(db_mod.POItem.product_id == product_id).all()
+        for item in po_items:
+            db.delete(item)
+
+        # Delete product
+        db.delete(product)
+        db.commit()
+
+        log_action(db, "DELETE", "PRODUCT", product_id, f"Deleted product: {product_name} ({product_sku})")
+        return {"status": "success"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/inventory/adjust")
 def adjust_inventory(data: dict, db: Session = Depends(get_db)):
     prod_id = data.get("productId")
