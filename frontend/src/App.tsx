@@ -128,9 +128,104 @@ const StatCard = ({ icon: Icon, label, value, color, alert }: any) => (
   </div>
 );
 
+// --- MODALS ---
+const ProductModal = ({ isOpen, onClose, onSave, categories }: any) => {
+  const [formData, setFormData] = React.useState({ name: '', sku: '', category: '', price: '', quantity: '', reorderPoint: '10' });
+  const [isCustomCategory, setIsCustomCategory] = React.useState(false);
+  const [customCategory, setCustomCategory] = React.useState('');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    const finalCategory = isCustomCategory ? customCategory : formData.category;
+    onSave({ ...formData, category: finalCategory });
+    setFormData({ name: '', sku: '', category: '', price: '', quantity: '', reorderPoint: '10' });
+    setCustomCategory('');
+    setIsCustomCategory(false);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <h2 style={{ marginBottom: '24px', fontSize: '24px', fontWeight: 800 }}>Add New Product</h2>
+        <form onSubmit={handleSubmit}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="form-group">
+              <label>Product Name</label>
+              <input type="text" className="form-input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required placeholder="e.g. Wireless Mouse" />
+            </div>
+            <div className="form-group">
+              <label>SKU Number</label>
+              <input type="text" className="form-input" value={formData.sku} onChange={e => setFormData({...formData, sku: e.target.value})} required placeholder="SKU-001" />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Category</label>
+            {!isCustomCategory ? (
+              <select 
+                className="form-input" 
+                value={formData.category} 
+                onChange={e => {
+                  if (e.target.value === 'ADD_NEW') {
+                    setIsCustomCategory(true);
+                  } else {
+                    setFormData({...formData, category: e.target.value});
+                  }
+                }}
+                required
+              >
+                <option value="">Select Category</option>
+                {categories.map((c: string) => <option key={c} value={c}>{c}</option>)}
+                <option value="ADD_NEW" style={{ fontWeight: 'bold', color: 'var(--teal)' }}>+ Add Custom Category</option>
+              </select>
+            ) : (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={customCategory} 
+                  onChange={e => setCustomCategory(e.target.value)} 
+                  placeholder="Enter custom category" 
+                  required 
+                  autoFocus
+                />
+                <button type="button" className="btn btn-outline" onClick={() => setIsCustomCategory(false)}>Cancel</button>
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+            <div className="form-group">
+              <label>Price ($)</label>
+              <input type="number" step="0.01" className="form-input" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} required />
+            </div>
+            <div className="form-group">
+              <label>Initial Qty</label>
+              <input type="number" className="form-input" value={formData.quantity} onChange={e => setFormData({...formData, quantity: e.target.value})} required />
+            </div>
+            <div className="form-group">
+              <label>Reorder Point</label>
+              <input type="number" className="form-input" value={formData.reorderPoint} onChange={e => setFormData({...formData, reorderPoint: e.target.value})} required />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+            <button type="submit" className="btn btn-teal" style={{ flex: 1, justifyContent: 'center' }}>Save Product</button>
+            <button type="button" className="btn btn-outline" style={{ flex: 1, justifyContent: 'center' }} onClick={onClose}>Discard</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // --- INVENTORY ---
 const Inventory = () => {
   const [products, setProducts] = React.useState<any[]>([]);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  
   const fetchProducts = () => { fetch(`${API_BASE}/products`).then(res => res.json()).then(setProducts); };
   React.useEffect(fetchProducts, []);
 
@@ -138,12 +233,37 @@ const Inventory = () => {
     fetch(`${API_BASE}/inventory/adjust`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId, adjustment }) }).then(fetchProducts);
   };
 
+  const handleSaveProduct = async (data: any) => {
+    const res = await fetch(`${API_BASE}/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) {
+      setIsModalOpen(false);
+      fetchProducts();
+    } else {
+      const err = await res.json();
+      alert(err.detail || 'Error saving product');
+    }
+  };
+
+  const categories = Array.from(new Set(products.map(p => p.category))).filter(Boolean);
+
   return (
     <div className="anim-fade-up">
        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
           <h1 style={{ fontSize: '32px', fontWeight: 800, color: 'var(--navy)' }}>Inventory</h1>
-          <button className="btn btn-teal">Create SKU</button>
+          <button className="btn btn-teal" onClick={() => setIsModalOpen(true)}>Add Product</button>
        </div>
+       
+       <ProductModal 
+         isOpen={isModalOpen} 
+         onClose={() => setIsModalOpen(false)} 
+         onSave={handleSaveProduct}
+         categories={categories}
+       />
+
        <table className="data-table">
           <thead>
             <tr><th>Product / SKU</th><th>Category</th><th>Qty</th><th>Asset Value</th><th>Status</th><th>Adjust</th></tr>

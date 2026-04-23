@@ -96,6 +96,59 @@ def get_products(db: Session = Depends(get_db)):
         })
     return result
 
+@app.post("/api/products")
+def create_product(data: dict, db: Session = Depends(get_db)):
+    try:
+        name = data.get("name")
+        sku = data.get("sku")
+        category = data.get("category")
+        
+        # Handle potential empty strings from frontend
+        price_val = data.get("price")
+        price = float(price_val) if price_val not in [None, ""] else 0.0
+        
+        qty_val = data.get("quantity")
+        quantity = int(qty_val) if qty_val not in [None, ""] else 0
+        
+        reorder_val = data.get("reorderPoint")
+        reorder_point = int(reorder_val) if reorder_val not in [None, ""] else 10
+
+        if not name or not sku:
+            raise HTTPException(status_code=400, detail="Name and SKU are required")
+
+        # Check if SKU already exists
+        existing = db.query(db_mod.Product).filter(db_mod.Product.sku == sku).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="SKU already exists")
+
+        new_product = db_mod.Product(
+            name=name,
+            sku=sku,
+            category=category,
+            price=price,
+            reorder_point=reorder_point,
+            reorder_qty=reorder_point * 2
+        )
+        db.add(new_product)
+        db.commit()
+        db.refresh(new_product)
+
+        # Initialize inventory in Main Warehouse (ID 1)
+        new_inventory = db_mod.Inventory(
+            product_id=new_product.id,
+            warehouse_id=1,
+            quantity=quantity
+        )
+        db.add(new_inventory)
+        db.commit()
+
+        log_action(db, "CREATE", "PRODUCT", new_product.id, f"Added new product: {name} ({sku})")
+        return {"status": "success", "id": new_product.id}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid numeric value: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/inventory/adjust")
 def adjust_inventory(data: dict, db: Session = Depends(get_db)):
     prod_id = data.get("productId")
